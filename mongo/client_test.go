@@ -38,7 +38,7 @@ func TestClient(t *testing.T) {
 	fn := func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		res, err := InsertOne(ctx, GetCOll(tc.realCli, "retu_test", "retu-test_collection"),
+		res, err := tc.InsertOne(ctx, "retu_test", "retu-test_collection",
 			bson.D{{"name", "pi"}, {"value", 3.14159}})
 		if err != nil {
 			fmt.Println(err)

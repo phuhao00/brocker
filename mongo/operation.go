@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
 
 	jsoniter "github.com/json-iterator/go"
 
@@ -14,65 +15,74 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetCOll(client *mongo.Client, dbName, collName string) *mongo.Collection {
-	collection := client.Database(dbName).Collection(collName)
-	return collection
+func (c *Client) Aggregate(ctx context.Context, dbName, collName string, pipeline mongo.Pipeline) (*mongo.Cursor, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+	cursor, err := collection.Aggregate(ctx, pipeline)
+	return cursor, err
 }
 
-func InsertOne(ctx context.Context, coll *mongo.Collection, data interface{}) (*mongo.InsertOneResult, error) {
-	res, err := coll.InsertOne(ctx, data)
+func (c *Client) InsertOne(ctx context.Context, dbName, collName string, data interface{}) (*mongo.InsertOneResult, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+
+	res, err := collection.InsertOne(ctx, data)
 	return res, err
 }
 
-func InsertMany(ctx context.Context, coll *mongo.Collection, data []interface{}) (*mongo.InsertManyResult, error) {
+func (c *Client) InsertMany(ctx context.Context, dbName, collName string, data []interface{}) (*mongo.InsertManyResult, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
 
-	res, err := coll.InsertMany(ctx, data)
+	res, err := collection.InsertMany(ctx, data)
 	return res, err
 }
 
-func FindOne(ctx context.Context, coll *mongo.Collection, filter interface{}) *mongo.SingleResult {
+func (c *Client) FindOne(ctx context.Context, dbName, collName string, filter interface{}) *mongo.SingleResult {
+	collection := c.realCli.Database(dbName).Collection(collName)
 
-	return coll.FindOne(ctx, filter)
+	return collection.FindOne(ctx, filter)
 }
 
-func Find(ctx context.Context, coll *mongo.Collection, filter interface{}) (*mongo.Cursor, error) {
+func (c *Client) Find(ctx context.Context, dbName, collName string, filter interface{}) (*mongo.Cursor, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
 
-	return coll.Find(ctx, filter)
+	return collection.Find(ctx, filter)
 }
 
-func FindWithOption(ctx context.Context, coll *mongo.Collection, filter interface{},
+func (c *Client) FindWithOption(ctx context.Context, dbName, collName string, filter interface{},
 	findOptions *options.FindOptions) (*mongo.Cursor, error) {
-
-	return coll.Find(ctx, filter, findOptions)
+	collection := c.realCli.Database(dbName).Collection(collName)
+	return collection.Find(ctx, filter, findOptions)
 }
 
-func Distinct(ctx context.Context, coll *mongo.Collection, fieldName string, filter interface{}) ([]interface{}, error) {
-
-	return coll.Distinct(ctx, fieldName, filter)
+func (c *Client) Distinct(ctx context.Context, dbName, collName string, fieldName string, filter interface{}) ([]interface{}, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+	return collection.Distinct(ctx, fieldName, filter)
 }
 
-func UpdateOne(ctx context.Context, coll *mongo.Collection, filter interface{}, data interface{}) (*mongo.UpdateResult, error) {
-
-	return coll.UpdateOne(ctx, filter, data)
+func (c *Client) UpdateOne(ctx context.Context, dbName, collName string, filter interface{}, data interface{}) (*mongo.UpdateResult, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+	return collection.UpdateOne(ctx, filter, data)
 }
 
-func UpdateMany(ctx context.Context, coll *mongo.Collection, filter interface{}, data interface{}) (*mongo.UpdateResult, error) {
+func (c *Client) UpdateMany(ctx context.Context, dbName, collName string, filter interface{}, data interface{}) (*mongo.UpdateResult, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
 
-	return coll.UpdateMany(ctx, filter, data)
+	return collection.UpdateMany(ctx, filter, data)
 }
 
-func UpdateByID(ctx context.Context, coll *mongo.Collection, id interface{}, data interface{}) (*mongo.UpdateResult, error) {
+func (c *Client) UpdateByID(ctx context.Context, dbName, collName string, id interface{}, data interface{}) (*mongo.UpdateResult, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
 
-	return coll.UpdateByID(ctx, id, data)
+	return collection.UpdateByID(ctx, id, data)
 }
 
-func UpdateOneWithSession(ctx context.Context, client *mongo.Client, coll *mongo.Collection, filter interface{}, data interface{}) error {
+func (c *Client) UpdateOneWithSession(ctx context.Context, dbName, collName string, filter interface{}, data interface{}) error {
+	collection := c.realCli.Database(dbName).Collection(collName)
 
 	var (
 		session mongo.Session
 		err     error
 	)
-	session, err = client.StartSession()
+	session, err = c.realCli.StartSession()
 	if err != nil {
 		return err
 	}
@@ -80,7 +90,7 @@ func UpdateOneWithSession(ctx context.Context, client *mongo.Client, coll *mongo
 		return err
 	}
 	f := func(sessionContext mongo.SessionContext) error {
-		_, err = coll.UpdateOne(sessionContext, filter, data)
+		_, err = collection.UpdateOne(sessionContext, filter, data)
 		if err != nil {
 			return err
 		}
@@ -98,13 +108,14 @@ func UpdateOneWithSession(ctx context.Context, client *mongo.Client, coll *mongo
 	return nil
 }
 
-func UpdateManyWithSession(ctx context.Context, client *mongo.Client, coll *mongo.Collection, filter interface{}, data interface{}) error {
+func (c *Client) UpdateManyWithSession(ctx context.Context, dbName, collName string, filter interface{}, data interface{}) error {
+	collection := c.realCli.Database(dbName).Collection(collName)
 
 	var (
 		session mongo.Session
 		err     error
 	)
-	session, err = client.StartSession()
+	session, err = c.realCli.StartSession()
 	if err != nil {
 		return err
 	}
@@ -112,7 +123,7 @@ func UpdateManyWithSession(ctx context.Context, client *mongo.Client, coll *mong
 		return err
 	}
 	f := func(sessionContext mongo.SessionContext) error {
-		_, err = coll.UpdateMany(sessionContext, filter, data)
+		_, err = collection.UpdateMany(sessionContext, filter, data)
 		if err != nil {
 			return err
 		}
@@ -130,13 +141,14 @@ func UpdateManyWithSession(ctx context.Context, client *mongo.Client, coll *mong
 	return nil
 }
 
-func UpdateByIDWithSession(ctx context.Context, client *mongo.Client, coll *mongo.Collection, id interface{}, data interface{}) error {
+func (c *Client) UpdateByIDWithSession(ctx context.Context, dbName, collName string, id interface{}, data interface{}) error {
+	collection := c.realCli.Database(dbName).Collection(collName)
 
 	var (
 		session mongo.Session
 		err     error
 	)
-	session, err = client.StartSession()
+	session, err = c.realCli.StartSession()
 	if err != nil {
 		return err
 	}
@@ -144,7 +156,7 @@ func UpdateByIDWithSession(ctx context.Context, client *mongo.Client, coll *mong
 		return err
 	}
 	f := func(sessionContext mongo.SessionContext) error {
-		_, err = coll.UpdateByID(sessionContext, id, data)
+		_, err = collection.UpdateByID(sessionContext, id, data)
 		if err != nil {
 			return err
 		}
@@ -162,35 +174,45 @@ func UpdateByIDWithSession(ctx context.Context, client *mongo.Client, coll *mong
 	return nil
 }
 
-func DeleteOne(ctx context.Context, coll *mongo.Collection, filter interface{}) (*mongo.DeleteResult, error) {
+func (c *Client) ReplaceOne(ctx context.Context, dbName, collName string, filter interface{}, replacement interface{}) (*mongo.UpdateResult, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+	result, err := collection.ReplaceOne(ctx, filter, replacement)
+	return result, err
 
-	return coll.DeleteOne(ctx, filter)
 }
 
-func DeleteMany(ctx context.Context, coll *mongo.Collection, filter interface{}) (*mongo.DeleteResult, error) {
+func (c *Client) DeleteOne(ctx context.Context, dbName, collName string, filter interface{}) (*mongo.DeleteResult, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
 
-	return coll.DeleteMany(ctx, filter)
+	return collection.DeleteOne(ctx, filter)
 }
 
-func Count(ctx context.Context, coll *mongo.Collection, filter interface{}) (int64, error) {
+func (c *Client) DeleteMany(ctx context.Context, dbName, collName string, filter interface{}) (*mongo.DeleteResult, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
 
-	return coll.CountDocuments(ctx, filter)
+	return collection.DeleteMany(ctx, filter)
 }
 
-func ChangeStreamClient(client *mongo.Client, coll *mongo.Collection) {
+func (c *Client) Count(ctx context.Context, dbName, collName string, filter interface{}) (int64, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+
+	return collection.CountDocuments(ctx, filter)
+}
+
+func (c *Client) ChangeStreamClient(client *mongo.Client, coll *mongo.Collection) {
 	//
 }
 
-func ChangeStreamCollection(client *mongo.Client, coll *mongo.Collection) {
+func (c *Client) ChangeStreamCollection(client *mongo.Client, coll *mongo.Collection) {
 	//
 }
 
-func ChangeStreamDB(client *mongo.Client, coll *mongo.Collection) {
+func (c *Client) ChangeStreamDB(client *mongo.Client, coll *mongo.Collection) {
 	//
 }
 
 //UploadGridFS ...
-func UploadGridFS(ctx context.Context, filename string, data interface{}, db *mongo.Database, bucketOptions *options.BucketOptions) error {
+func (c *Client) UploadGridFS(ctx context.Context, filename string, data interface{}, db *mongo.Database, bucketOptions *options.BucketOptions) error {
 	bucket, err := gridfs.NewBucket(db, bucketOptions)
 	if err != nil {
 		return err
@@ -213,7 +235,7 @@ func UploadGridFS(ctx context.Context, filename string, data interface{}, db *mo
 }
 
 //DownLoadGridFS ...
-func DownLoadGridFS(ctx context.Context, fileID interface{}, db *mongo.Database, bucketOptions *options.BucketOptions) (string, error) {
+func (c *Client) DownLoadGridFS(ctx context.Context, fileID interface{}, db *mongo.Database, bucketOptions *options.BucketOptions) (string, error) {
 	bucket, err := gridfs.NewBucket(db, bucketOptions)
 	if err != nil {
 		return "", err
@@ -224,4 +246,53 @@ func DownLoadGridFS(ctx context.Context, fileID interface{}, db *mongo.Database,
 		return "", err
 	}
 	return b.String(), err
+}
+
+//EstimatedDocumentCount You can get an approximation on the number of documents in a collection
+func (c *Client) EstimatedDocumentCount(ctx context.Context, dbName, collName string) (int64, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+	estCount, estCountErr := collection.EstimatedDocumentCount(ctx)
+	return estCount, estCountErr
+}
+
+//CountDocuments You can get an exact number of documents in a collection
+func (c *Client) CountDocuments(ctx context.Context, dbName, collName string, filter interface{}) (int64, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+	estCount, estCountErr := collection.CountDocuments(ctx, filter)
+	return estCount, estCountErr
+}
+
+func (c *Client) RunCommand(ctx context.Context, dbName string, command interface{}) (bson.M, error) {
+	db := c.realCli.Database(dbName)
+	var result bson.M
+	err := db.RunCommand(ctx, command).Decode(&result)
+	return result, err
+}
+
+func (c *Client) BulkWrite(ctx context.Context, dbName, collName string, models []mongo.WriteModel, opts *options.BulkWriteOptions) (*mongo.BulkWriteResult, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+	results, err := collection.BulkWrite(ctx, models, opts)
+	return results, err
+}
+
+//CreateIndex
+//Single Field Indexes
+//Compound Indexes
+//Multikey Indexes (Indexes on Array Fields)
+//Text Indexes
+//Geospatial Indexes
+//Unique Indexes
+
+func (c *Client) CreateIndex(ctx context.Context, dbName, collName string, indexModel mongo.IndexModel) (string, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+
+	name, err := collection.Indexes().CreateOne(ctx, indexModel)
+	return name, err
+}
+
+func (c *Client) DropIndex(ctx context.Context, dbName, collName string, indexName string) (bson.Raw, error) {
+	collection := c.realCli.Database(dbName).Collection(collName)
+
+	res, err := collection.Indexes().DropOne(ctx, indexName)
+	return res, err
 }
