@@ -27,7 +27,7 @@ func TestClient(t *testing.T) {
 	to := &testOwner{}
 	tc := &Client{
 		BaseComponent: broker.NewBaseComponent(),
-		realCli: NewClient(ctx, &Config{
+		RealCli: NewClient(ctx, &Config{
 			URI:         "mongodb://localhost:27017",
 			MinPoolSize: 3,
 			MaxPoolSize: 3000,

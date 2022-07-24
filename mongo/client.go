@@ -15,7 +15,7 @@ import (
 
 type Client struct {
 	*broker.BaseComponent
-	realCli *mongo.Client
+	RealCli *mongo.Client
 }
 
 type Config struct {
