@@ -18,11 +18,6 @@ type Client struct {
 	RealCli *mongo.Client
 }
 
-type Config struct {
-	URI                      string
-	MinPoolSize, MaxPoolSize uint64
-}
-
 func NewClient(ctx context.Context, config *Config) *mongo.Client {
 	opt := options.Client().ApplyURI(config.URI)
 	opt.SetMinPoolSize(config.MinPoolSize).SetMaxPoolSize(config.MaxPoolSize)
