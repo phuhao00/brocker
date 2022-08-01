@@ -7,10 +7,10 @@ import (
 )
 
 type ProducerConfig struct {
+	FailOnConnErr  bool
+	MaxConcurrency int
 	Address        string
 	Topic          string
-	MaxConcurrency int
-	FailOnConnErr  bool
 	DialTimeout    time.Duration
 	ReadTimeout    time.Duration
 	WriteTimeout   time.Duration

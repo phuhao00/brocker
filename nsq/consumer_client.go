@@ -6,42 +6,77 @@ import (
 	_ "github.com/nsqio/go-nsq"
 	"log"
 	"net"
+	"time"
 )
+
+type ConsumerConfig struct {
+	Topic        string
+	Channel      string
+	Address      string
+	Lookup       []string
+	MaxInFlight  int
+	Identify     nsq.IdentifyResponse
+	DialTimeout  time.Duration
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	DrainTimeout time.Duration
+}
+
+func (c *ConsumerConfig) defaults() {
+	if c.MaxInFlight == 0 {
+		c.MaxInFlight = DefaultMaxInFlight
+	}
+
+	if c.DialTimeout == 0 {
+		c.DialTimeout = DefaultDialTimeout
+	}
+
+	if c.ReadTimeout == 0 {
+		c.ReadTimeout = DefaultReadTimeout
+	}
+
+	if c.WriteTimeout == 0 {
+		c.WriteTimeout = DefaultWriteTimeout
+	}
+	if c.DrainTimeout == 0 {
+		c.DrainTimeout = DefaultDrainTimeout
+	}
+}
 
 type ConsumerClient struct {
 	q                *nsq.Consumer
 	messagesSent     int
 	messagesReceived int
 	messagesFailed   int
-	NSQDPort         string
+	NSQDAddresses    []string
 }
 
-func NewConsumerClient(addr, topicName, channel, NSQDPort string, cb func(c *nsq.Config)) *ConsumerClient {
+func NewConsumerClient(conf ConsumerConfig, cb func(c *nsq.Config)) *ConsumerClient {
 	config := nsq.NewConfig()
-	config.LocalAddr, _ = net.ResolveTCPAddr("tcp", addr+":0")
+	config.LocalAddr, _ = net.ResolveTCPAddr("tcp", conf.Address+":0")
 	//config.DefaultRequeueDelay = 0
 	//config.MaxBackoffDuration = time.Millisecond * 50
 	if cb != nil {
 		cb(config)
 	}
 	if config.Deflate {
-		topicName = topicName + "_deflate"
+		conf.Topic = conf.Topic + "_deflate"
 	} else if config.Snappy {
-		topicName = topicName + "_snappy"
+		conf.Topic = conf.Topic + "_snappy"
 	}
 	if config.TlsV1 {
-		topicName = topicName + "_tls"
+		conf.Topic = conf.Topic + "_tls"
 	}
-	q, _ := nsq.NewConsumer(topicName, channel, config)
+	q, _ := nsq.NewConsumer(conf.Topic, conf.Channel, config)
 	q.SetLogger(log.Default(), nsq.LogLevelDebug)
-	c := &ConsumerClient{q: q, NSQDPort: NSQDPort}
+	c := &ConsumerClient{q: q}
 
 	return c
 }
 
 func (c *ConsumerClient) AddHandle(handler nsq.Handler) {
 	c.q.AddHandler(handler)
-	err := c.q.ConnectToNSQD("127.0.0.1:" + c.NSQDPort)
+	err := c.q.ConnectToNSQDs(c.NSQDAddresses)
 	if err != nil {
 		fmt.Println(err)
 	}

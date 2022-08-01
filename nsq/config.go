@@ -1,22 +1,8 @@
 package nsq
 
 import (
-	"github.com/nsqio/go-nsq"
 	"time"
 )
-
-type ConsumerConfig struct {
-	Topic        string
-	Channel      string
-	Address      string
-	Lookup       []string
-	MaxInFlight  int
-	Identify     nsq.IdentifyResponse
-	DialTimeout  time.Duration
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-	DrainTimeout time.Duration
-}
 
 const (
 	DefaultUserAgent       = ""
@@ -33,23 +19,26 @@ const (
 	NoTimeout = time.Duration(0)
 )
 
-func (c *ConsumerConfig) defaults() {
-	if c.MaxInFlight == 0 {
-		c.MaxInFlight = DefaultMaxInFlight
-	}
-
-	if c.DialTimeout == 0 {
-		c.DialTimeout = DefaultDialTimeout
-	}
-
-	if c.ReadTimeout == 0 {
-		c.ReadTimeout = DefaultReadTimeout
-	}
-
-	if c.WriteTimeout == 0 {
-		c.WriteTimeout = DefaultWriteTimeout
-	}
-	if c.DrainTimeout == 0 {
-		c.DrainTimeout = DefaultDrainTimeout
-	}
+type NodeData struct {
+	RemoteAddr    string      `json:"remote_address"`
+	HostName      string      `json:"hostname"`
+	BroadcastAddr string      `json:"broadcast_address"`
+	TCPPort       int         `json:"tcp_port"`
+	HTTPPort      int         `json:"http_port"`
+	Version       string      `json:"version"`
+	Tombstones    interface{} `json:"tombstones"`
+	Topics        interface{} `json:"topics"`
 }
+
+type NodesData struct {
+	Producers []*NodeData `json:"producers"`
+}
+
+const (
+	httpPrefix    = "http://"
+	createTopic   = httpPrefix + "%s" + "/topic/create?topic=" + "%s"
+	deleteTopic   = httpPrefix + "%s" + "/topic/delete?topic=" + "%s"
+	createChannel = httpPrefix + "%s" + "/channel/create?topic=" + "%s" + "&channel=" + "%s"
+	deleteChannel = httpPrefix + "%s" + "/channel/delete?topic=" + "%s" + "&channel=" + "%s"
+	queryNodeData = httpPrefix + "%s/nodes"
+)

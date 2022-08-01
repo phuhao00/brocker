@@ -8,7 +8,13 @@ import (
 )
 
 func TestConsumer(t *testing.T) {
-	consumerClient := nsq.NewConsumerClient("127.0.0.1", "test", "tch", "4150", nil)
+	conf := nsq.ConsumerConfig{
+		Topic:   "test",
+		Channel: "tch",
+		Address: "127.0.0.1",
+		Lookup:  []string{"127.0.0.1:4150"},
+	}
+	consumerClient := nsq.NewConsumerClient(conf, nil)
 	ch := &ConsumerHandle{}
 	ch.Register(0, func(message *gnsq.Message) error {
 		fmt.Println("hello nsq")
