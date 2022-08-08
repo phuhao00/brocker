@@ -69,8 +69,9 @@ func NewConsumerClient(conf ConsumerConfig, cb func(c *nsq.Config)) *ConsumerCli
 	}
 	q, _ := nsq.NewConsumer(conf.Topic, conf.Channel, config)
 	q.SetLogger(log.Default(), nsq.LogLevelDebug)
-	c := &ConsumerClient{q: q}
 
+	c := &ConsumerClient{q: q}
+	c.NSQDAddresses = conf.Lookup
 	return c
 }
 
