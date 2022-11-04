@@ -7,13 +7,13 @@ import (
 
 type ClusterClient struct {
 	*broker.BaseComponent
-	real *redis.ClusterClient
+	*redis.ClusterClient
 }
 
 func NewClusterClient(conf *Config) *ClusterClient {
 	c := &ClusterClient{
 		BaseComponent: broker.NewBaseComponent(),
-		real: redis.NewClusterClient(&redis.ClusterOptions{
+		ClusterClient: redis.NewClusterClient(&redis.ClusterOptions{
 			Addrs: conf.Addrs,
 
 			//Addrs: []string{":7000", ":7001", ":7002", ":7003", ":7004", ":7005"},
