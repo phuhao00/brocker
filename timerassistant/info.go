@@ -11,6 +11,6 @@ type CallInfo struct {
 func (cb *CallInfo) NotifyOwner() {
 	if cb.Category.ShouldCall() {
 		cb.ResumeCallCh <- cb.Fn
-		cb.Category.SetLastCallTime(time.Now().Unix())
+		cb.Category.SetLastCallTime(time.Now().UnixNano())
 	}
 }

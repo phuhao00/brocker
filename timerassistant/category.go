@@ -7,11 +7,48 @@ type CallCategory interface {
 	SetLastCallTime(int642 int64)
 }
 
+type Interval struct {
+	Duration     time.Duration
+	LastCallTime int64
+}
+
+func NewInterval(duration time.Duration, ShouldNowExecute bool) *Interval {
+	interval := &Interval{
+		Duration:     duration,
+		LastCallTime: 0,
+	}
+	if !ShouldNowExecute {
+		interval.LastCallTime = time.Now().UnixNano()
+	}
+	return interval
+}
+
+func (i *Interval) ShouldCall() bool {
+	curTime := time.Now()
+	curUnixNano := curTime.UnixNano()
+	if curUnixNano-i.LastCallTime < int64(i.Duration) {
+		return false
+	}
+	return true
+}
+
+func (i *Interval) SetLastCallTime(timeStamp int64) {
+	i.LastCallTime = timeStamp
+}
+
 type Once struct {
 	Hour         int
 	Min          int
 	Sec          int
 	lastCallTime int64
+}
+
+func NewOnce(hour, min, sec int) *Once {
+	return &Once{
+		Hour: hour,
+		Min:  min,
+		Sec:  sec,
+	}
 }
 
 func (o *Once) ShouldCall() bool {
@@ -30,23 +67,31 @@ func (o *Once) SetLastCallTime(lastCallTime int64) {
 }
 
 type Daily struct {
-	Hour         int64
-	Min          int64
-	Sec          int64
+	Hour         int
+	Min          int
+	Sec          int
 	lastCallTime int64
+}
+
+func NewDaily(hour, min, sec int) *Daily {
+	return &Daily{
+		Hour: hour,
+		Min:  min,
+		Sec:  sec,
+	}
 }
 
 func (d *Daily) ShouldCall() bool {
 	now := time.Now().Local()
 	hour, min, sec := now.Clock()
-	nowSec := int64(hour*3660) + int64(min*60) + int64(sec)
+	nowSec := hour*3660 + min*60 + sec
 
 	if d.lastCallTime == 0 {
 		if nowSec >= (d.Hour*3600 + d.Hour*60 + d.Sec) {
 			return true
 		}
 	} else {
-		if nowSec >= (d.Hour*3600+d.Hour*60+d.Sec) && nowSec-d.lastCallTime >= int64(86400) {
+		if nowSec >= (d.Hour*3600+d.Hour*60+d.Sec) && int(nowSec-int(d.lastCallTime)) >= 86400 {
 			return true
 		}
 	}
