@@ -5,10 +5,9 @@ import (
 	"bytes"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	//"go.mongodb.org/mongo-driver/x/bsonx"
 
 	jsoniter "github.com/json-iterator/go"
-
-	"go.mongodb.org/mongo-driver/x/bsonx"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
@@ -211,14 +210,14 @@ func (c *Client) ChangeStreamDB(client *mongo.Client, coll *mongo.Collection) {
 	//
 }
 
-//UploadGridFS ...
+// UploadGridFS ...
 func (c *Client) UploadGridFS(ctx context.Context, filename string, data interface{}, db *mongo.Database, bucketOptions *options.BucketOptions) error {
 	bucket, err := gridfs.NewBucket(db, bucketOptions)
 	if err != nil {
 		return err
 	}
 	opts := options.GridFSUpload()
-	opts.SetMetadata(bsonx.Doc{{Key: "content-type", Value: bsonx.String("application/json")}})
+	//opts.SetMetadata(bsonx.Doc{{Key: "content-type", Value: bsonx.String("application/json")}})
 	var upLoadStream *gridfs.UploadStream
 	if upLoadStream, err = bucket.OpenUploadStream(filename, opts); err != nil {
 		return err
@@ -234,7 +233,7 @@ func (c *Client) UploadGridFS(ctx context.Context, filename string, data interfa
 	return nil
 }
 
-//DownLoadGridFS ...
+// DownLoadGridFS ...
 func (c *Client) DownLoadGridFS(ctx context.Context, fileID interface{}, db *mongo.Database, bucketOptions *options.BucketOptions) (string, error) {
 	bucket, err := gridfs.NewBucket(db, bucketOptions)
 	if err != nil {
@@ -248,14 +247,14 @@ func (c *Client) DownLoadGridFS(ctx context.Context, fileID interface{}, db *mon
 	return b.String(), err
 }
 
-//EstimatedDocumentCount You can get an approximation on the number of documents in a collection
+// EstimatedDocumentCount You can get an approximation on the number of documents in a collection
 func (c *Client) EstimatedDocumentCount(ctx context.Context, dbName, collName string) (int64, error) {
 	collection := c.RealCli.Database(dbName).Collection(collName)
 	estCount, estCountErr := collection.EstimatedDocumentCount(ctx)
 	return estCount, estCountErr
 }
 
-//CountDocuments You can get an exact number of documents in a collection
+// CountDocuments You can get an exact number of documents in a collection
 func (c *Client) CountDocuments(ctx context.Context, dbName, collName string, filter interface{}) (int64, error) {
 	collection := c.RealCli.Database(dbName).Collection(collName)
 	estCount, estCountErr := collection.CountDocuments(ctx, filter)

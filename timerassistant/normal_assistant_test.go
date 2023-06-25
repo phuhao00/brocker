@@ -1,15 +1,14 @@
-package normal
+package timerassistant
 
 import (
 	"fmt"
-	"github.com/phuhao00/broker/timerassistant"
 	"testing"
 	"time"
 )
 
 type TOwner struct {
 	resumeCh chan func()
-	o        timerassistant.TimerAssistant
+	o        TimerAssistant
 }
 
 func (o *TOwner) Execute(func()) {
@@ -30,8 +29,8 @@ func TestNormalAssistant(t *testing.T) {
 		resumeCh: make(chan func(), 1),
 		o:        NewTimerNormalAssistant(time.Second),
 	}
-	tn.o.AddCallBack(&timerassistant.CallInfo{
-		Category: &timerassistant.Once{
+	tn.o.AddCallBack(&CallInfo{
+		Category: &Once{
 			Hour: 22,
 			Min:  35,
 			Sec:  0,

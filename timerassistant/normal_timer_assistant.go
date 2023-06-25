@@ -1,8 +1,7 @@
-package normal
+package timerassistant
 
 import (
 	"fmt"
-	"github.com/phuhao00/broker/timerassistant"
 	"sync"
 	"time"
 )
@@ -18,21 +17,21 @@ func NewTimerNormalAssistant(tickTime time.Duration) *TimerNormalAssistant {
 	}
 }
 
-func (t *TimerNormalAssistant) AssertOwner(owner timerassistant.Owner) {
+func (t *TimerNormalAssistant) AssertOwner(owner Owner) {
 
 }
 
-func (t *TimerNormalAssistant) AddCallBack(info *timerassistant.CallInfo) {
+func (t *TimerNormalAssistant) AddCallBack(info *CallInfo) {
 	t.callbacks.Store(info, struct{}{})
 }
 
-func (t *TimerNormalAssistant) DelCallBack(info *timerassistant.CallInfo) {
+func (t *TimerNormalAssistant) DelCallBack(info *CallInfo) {
 	t.callbacks.Delete(info)
 }
 
 func (t *TimerNormalAssistant) Process() {
 	t.callbacks.Range(func(key, value any) bool {
-		cbInfo := key.(*timerassistant.CallInfo)
+		cbInfo := key.(*CallInfo)
 		cbInfo.NotifyOwner()
 		return true
 	})
