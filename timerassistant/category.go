@@ -84,7 +84,7 @@ func NewDaily(hour, min, sec int) *Daily {
 func (d *Daily) ShouldCall() bool {
 	now := time.Now().Local()
 	hour, min, sec := now.Clock()
-	nowSec := hour*3660 + min*60 + sec
+	nowSec := hour*3600 + min*60 + sec
 
 	if d.lastCallTime == 0 {
 		if nowSec >= (d.Hour*3600 + d.Hour*60 + d.Sec) {
